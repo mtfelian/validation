@@ -24,7 +24,7 @@ type Validation struct {
 }
 
 // String возвращает список ошибок валидации через переносы строк
-func (v Validation) String() {
+func (v Validation) String() string {
 	s := ""
 	for _, message := range v.Errors {
 		s += fmt.Sprintf("%s\n", message.String())
