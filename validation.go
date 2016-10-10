@@ -23,6 +23,15 @@ type Validation struct {
 	Errors []*ValidationError
 }
 
+// String возвращает список ошибок валидации через переносы строк
+func (v Validation) String() {
+	s := ""
+	for _, message := range v.Errors {
+		s += fmt.Sprintf("%s\n", message.String())
+	}
+	return s
+}
+
 // Clear удаляет все ошибки валидации
 func (v *Validation) Clear() {
 	v.Errors = []*ValidationError{}
