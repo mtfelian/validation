@@ -33,6 +33,10 @@ func (r Required) IsSatisfied(obj interface{}) bool {
 		return val != nil && *val != 0
 	case int:
 		return val != 0
+	case *uint:
+		return val != nil && *val != 0
+	case uint:
+		return val != 0
 	case *bool:
 		return val != nil && *val
 	case bool:
