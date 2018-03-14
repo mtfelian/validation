@@ -15,9 +15,7 @@ type Validator interface {
 
 type Required struct{}
 
-func ValidRequired() Required {
-	return Required{}
-}
+func ValidRequired() Required { return Required{} }
 
 func (r Required) IsSatisfied(obj interface{}) bool {
 	if obj == nil {
@@ -55,17 +53,11 @@ func (r Required) IsSatisfied(obj interface{}) bool {
 	return true
 }
 
-func (r Required) DefaultMessage() string {
-	return "Required"
-}
+func (r Required) DefaultMessage() string { return "Required" }
 
-type Min struct {
-	Min int
-}
+type Min struct{ Min int }
 
-func ValidMin(min int) Min {
-	return Min{min}
-}
+func ValidMin(min int) Min { return Min{min} }
 
 func (m Min) IsSatisfied(obj interface{}) bool {
 	switch num := obj.(type) {
@@ -78,17 +70,11 @@ func (m Min) IsSatisfied(obj interface{}) bool {
 	return false
 }
 
-func (m Min) DefaultMessage() string {
-	return fmt.Sprintln("Minimum is", m.Min)
-}
+func (m Min) DefaultMessage() string { return fmt.Sprintln("Minimum is", m.Min) }
 
-type Max struct {
-	Max int
-}
+type Max struct{ Max int }
 
-func ValidMax(max int) Max {
-	return Max{max}
-}
+func ValidMax(max int) Max { return Max{max} }
 
 func (m Max) IsSatisfied(obj interface{}) bool {
 	switch num := obj.(type) {
@@ -100,9 +86,7 @@ func (m Max) IsSatisfied(obj interface{}) bool {
 	return false
 }
 
-func (m Max) DefaultMessage() string {
-	return fmt.Sprintln("Maximum is", m.Max)
-}
+func (m Max) DefaultMessage() string { return fmt.Sprintln("Maximum is", m.Max) }
 
 // Requires an integer to be within Min, Max inclusive.
 type Range struct {
@@ -110,9 +94,7 @@ type Range struct {
 	Max
 }
 
-func ValidRange(min, max int) Range {
-	return Range{Min{min}, Max{max}}
-}
+func ValidRange(min, max int) Range { return Range{Min{min}, Max{max}} }
 
 func (r Range) IsSatisfied(obj interface{}) bool {
 	return r.Min.IsSatisfied(obj) && r.Max.IsSatisfied(obj)
@@ -123,13 +105,9 @@ func (r Range) DefaultMessage() string {
 }
 
 // Requires an array or string to be at least a given length.
-type MinSize struct {
-	Min int
-}
+type MinSize struct{ Min int }
 
-func ValidMinSize(min int) MinSize {
-	return MinSize{min}
-}
+func ValidMinSize(min int) MinSize { return MinSize{min} }
 
 func (m MinSize) IsSatisfied(obj interface{}) bool {
 	if str, ok := obj.(string); ok {
@@ -142,18 +120,12 @@ func (m MinSize) IsSatisfied(obj interface{}) bool {
 	return false
 }
 
-func (m MinSize) DefaultMessage() string {
-	return fmt.Sprintln("Minimum size is", m.Min)
-}
+func (m MinSize) DefaultMessage() string { return fmt.Sprintln("Minimum size is", m.Min) }
 
 // Requires an array or string to be at most a given length.
-type MaxSize struct {
-	Max int
-}
+type MaxSize struct{ Max int }
 
-func ValidMaxSize(max int) MaxSize {
-	return MaxSize{max}
-}
+func ValidMaxSize(max int) MaxSize { return MaxSize{max} }
 
 func (m MaxSize) IsSatisfied(obj interface{}) bool {
 	if str, ok := obj.(string); ok {
@@ -166,18 +138,12 @@ func (m MaxSize) IsSatisfied(obj interface{}) bool {
 	return false
 }
 
-func (m MaxSize) DefaultMessage() string {
-	return fmt.Sprintln("Maximum size is", m.Max)
-}
+func (m MaxSize) DefaultMessage() string { return fmt.Sprintln("Maximum size is", m.Max) }
 
 // Requires an array or string to be exactly a given length.
-type Length struct {
-	N int
-}
+type Length struct{ N int }
 
-func ValidLength(n int) Length {
-	return Length{n}
-}
+func ValidLength(n int) Length { return Length{n} }
 
 func (s Length) IsSatisfied(obj interface{}) bool {
 	if str, ok := obj.(string); ok {
@@ -190,38 +156,23 @@ func (s Length) IsSatisfied(obj interface{}) bool {
 	return false
 }
 
-func (s Length) DefaultMessage() string {
-	return fmt.Sprintln("Required length is", s.N)
-}
+func (s Length) DefaultMessage() string { return fmt.Sprintln("Required length is", s.N) }
 
 // Requires a string to match a given regex.
-type Match struct {
-	Regexp *regexp.Regexp
-}
+type Match struct{ Regexp *regexp.Regexp }
 
-func ValidMatch(regex *regexp.Regexp) Match {
-	return Match{regex}
-}
+func ValidMatch(regex *regexp.Regexp) Match { return Match{regex} }
 
 func (m Match) IsSatisfied(obj interface{}) bool {
-	str := obj.(string)
-	return m.Regexp.MatchString(str)
+	return m.Regexp.MatchString(obj.(string))
 }
 
-func (m Match) DefaultMessage() string {
-	return fmt.Sprintln("Must match", m.Regexp)
-}
+func (m Match) DefaultMessage() string { return fmt.Sprintln("Must match", m.Regexp) }
 
 var emailPattern = regexp.MustCompile("^[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\\w](?:[\\w-]*[\\w])?\\.)+[a-zA-Z0-9](?:[\\w-]*[\\w])?$")
 
-type Email struct {
-	Match
-}
+type Email struct{ Match }
 
-func ValidEmail() Email {
-	return Email{Match{emailPattern}}
-}
+func ValidEmail() Email { return Email{Match{emailPattern}} }
 
-func (e Email) DefaultMessage() string {
-	return fmt.Sprintln("Must be a valid email address")
-}
+func (e Email) DefaultMessage() string { return fmt.Sprintln("Must be a valid email address") }

@@ -4,7 +4,6 @@ import (
 	"testing"
 )
 
-// structToValidate это структура для тестов валидации
 type structToValidate struct {
 	checkRequired *string
 	checkMin      int
@@ -12,17 +11,16 @@ type structToValidate struct {
 	checkRange    int
 }
 
-// Validate валидирует структуру structToValidate для тестирования
+// Validate the s
 func (s structToValidate) Validate() (bool, *Validation) {
 	v := &Validation{}
-	v.Check(s.checkRequired, Required{}).Message("Поле checkRequired не может быть пустым")
-	v.Check(s.checkMin, Min{2}).Message("Значение поля checkMin слишком мало")
-	v.Check(s.checkMax, Max{5}).Message("Значение поля checkMax слишком велико")
-	v.Check(s.checkRange, Range{Min{2}, Max{5}}).Message("Значение поля checkRange вне диапазона")
+	v.Check(s.checkRequired, Required{}).Message("checkRequired should not be empty")
+	v.Check(s.checkMin, Min{2}).Message("checkMin field value too small")
+	v.Check(s.checkMax, Max{5}).Message("checkMax field value too high")
+	v.Check(s.checkRange, Range{Min{2}, Max{5}}).Message("checkRange is out of range")
 	return !v.HasErrors(), v
 }
 
-// getValidStructToValidate возвращает валидную структуру для тестов валидации
 func getValidStructToValidate() structToValidate {
 	return structToValidate{
 		checkRequired: pString("q"),
@@ -32,153 +30,149 @@ func getValidStructToValidate() structToValidate {
 	}
 }
 
-// pString возвращает указатель на строку s
-func pString(s string) *string {
-	return &s
-}
+func pString(s string) *string { return &s }
 
-// TestValidateIfOK тестирует валидацию валидной структуры
+// TestValidateIfOK checks valid structure validation
 func TestValidateIfOK(t *testing.T) {
 	s := getValidStructToValidate()
 
 	isValid, vContext := s.Validate()
 	if !isValid {
-		t.Fatal("Ожидалась валидная структура")
+		t.Fatal("Expected a valid struct")
 	}
 
 	expectedErrorCount := 0
 	receivedErrorCount := len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 }
 
-// TestValidateIfOK тестирует валидацию валидной структуры где поле,
-// проверяемое валидаторов Range имеет граничные значения
+// TestValidateIfOK checks valid structure validation if field checked by Range validator has border values
 func TestValidateRangeIfBorderOK(t *testing.T) {
 	s := getValidStructToValidate()
 
 	s.checkRange = 2
 	isValid, vContext := s.Validate()
 	if !isValid {
-		t.Fatal("Ожидалась валидная структура")
+		t.Fatal("Expected a valid struct")
 	}
 
 	expectedErrorCount := 0
 	receivedErrorCount := len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 
 	vContext.Clear()
 	s.checkRange = 5
 	isValid, vContext = s.Validate()
 	if !isValid {
-		t.Fatal("Ожидалась валидная структура")
+		t.Fatal("Expected a valid struct")
 	}
 
 	expectedErrorCount = 0
 	receivedErrorCount = len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 }
 
-// TestValidateRequired тестирует проверку на отсутствие необходимого поля
+// TestValidateRequired checks validation for the required field
 func TestValidateRequired(t *testing.T) {
 	s := getValidStructToValidate()
 
 	s.checkRequired = nil
 	isValid, vContext := s.Validate()
 	if isValid {
-		t.Fatal("Ожидалась невалидная структура")
+		t.Fatal("Expected invalid struct")
 	}
 
 	expectedErrorCount := 1
 	receivedErrorCount := len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 
 	vContext.Clear()
 	s.checkRequired = pString("")
 	isValid, vContext = s.Validate()
 	if isValid {
-		t.Fatal("Ожидалась невалидная структура")
+		t.Fatal("Expected invalid struct")
 	}
 
 	expectedErrorCount = 1
 	receivedErrorCount = len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 }
 
-// TestValidateMin тестирует проверку на значение меньше минимального
+// TestValidateMin checks validation of value lesser then min
 func TestValidateMin(t *testing.T) {
 	s := getValidStructToValidate()
 
 	s.checkMin = 1
 	isValid, vContext := s.Validate()
 	if isValid {
-		t.Fatal("Ожидалась невалидная структура")
+		t.Fatal("Expected invalid struct")
 	}
 
 	expectedErrorCount := 1
 	receivedErrorCount := len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 }
 
-// TestValidateMax тестирует проверку на значение больше максимального
+// TestValidateMax checks validation of value higher then max
 func TestValidateMax(t *testing.T) {
 	s := getValidStructToValidate()
 
 	s.checkMax = 6
 	isValid, vContext := s.Validate()
 	if isValid {
-		t.Fatal("Ожидалась невалидная структура")
+		t.Fatal("Expected invalid struct")
 	}
 
 	expectedErrorCount := 1
 	receivedErrorCount := len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 }
 
-// TestValidateRange тестирует проверку на значение вне диапазона
+// TestValidateRange checks validation of out of range value
 func TestValidateRange(t *testing.T) {
 	s := getValidStructToValidate()
 
 	s.checkRange = 1
 	isValid, vContext := s.Validate()
 	if isValid {
-		t.Fatal("Ожидалась невалидная структура")
+		t.Fatal("Expected invalid struct")
 	}
 
 	expectedErrorCount := 1
 	receivedErrorCount := len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 
 	vContext.Clear()
 	s.checkRange = 6
 	isValid, vContext = s.Validate()
 	if isValid {
-		t.Fatal("Ожидалась невалидная структура")
+		t.Fatal("Expected invalid struct")
 	}
 
 	expectedErrorCount = 1
 	receivedErrorCount = len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 }
 
-// TestValidateIfTwoErrors проверяет что есть сообщения об ошибках в случае нескольких ошибок
+// TestValidateIfTwoErrors checks error details to contain multiple messages if such
 func TestValidateIfTwoErrors(t *testing.T) {
 	s := getValidStructToValidate()
 
@@ -186,12 +180,12 @@ func TestValidateIfTwoErrors(t *testing.T) {
 	s.checkMax = 6
 	isValid, vContext := s.Validate()
 	if isValid {
-		t.Fatal("Ожидалась невалидная структура")
+		t.Fatal("Expected invalid struct")
 	}
 
 	expectedErrorCount := 2
 	receivedErrorCount := len(vContext.Errors)
 	if receivedErrorCount != expectedErrorCount {
-		t.Fatalf("Ожидалось %d ошибок валидации, получено: %d", expectedErrorCount, receivedErrorCount)
+		t.Fatalf("Expected %d validation errors, received: %d", expectedErrorCount, receivedErrorCount)
 	}
 }

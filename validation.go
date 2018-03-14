@@ -5,12 +5,10 @@ import (
 	"regexp"
 )
 
-// ValidationError хранит сообщение об ошибке валидации
-type ValidationError struct {
-	Message string
-}
+// ValidationError represents validation error message
+type ValidationError struct{ Message string }
 
-// String возвращает поле Message из структуры ValidationError
+// String returns a validation error message
 func (e *ValidationError) String() string {
 	if e == nil {
 		return ""
@@ -18,12 +16,10 @@ func (e *ValidationError) String() string {
 	return e.Message
 }
 
-// Validation хранит сообщения об ошибках валидации
-type Validation struct {
-	Errors []*ValidationError
-}
+// Validation represents validation errors list
+type Validation struct{ Errors []*ValidationError }
 
-// String возвращает список ошибок валидации через переносы строк
+// String returns a formatted list of validation errors separated by new lines
 func (v Validation) String() string {
 	s := ""
 	for _, message := range v.Errors {
@@ -32,113 +28,93 @@ func (v Validation) String() string {
 	return s
 }
 
-// Clear удаляет все ошибки валидации
-func (v *Validation) Clear() {
-	v.Errors = []*ValidationError{}
-}
+// Clear all validation errors
+func (v *Validation) Clear() { v.Errors = []*ValidationError{} }
 
-// HasErrors возвращает true если есть хотя бы одна ошибка, иначе false
-func (v *Validation) HasErrors() bool {
-	return len(v.Errors) > 0
-}
+// HasErrors returns true if v contains at least one error
+func (v *Validation) HasErrors() bool { return len(v.Errors) > 0 }
 
-// Error добавляет ошибку в контекст валидации
+// Error adds an error message to a validation context
 func (v *Validation) Error(message string, args ...interface{}) *ValidationResult {
-	result := (&ValidationResult{
-		Ok:    false,
-		Error: &ValidationError{},
-	}).Message(message, args...)
+	result := (&ValidationResult{Ok: false, Error: &ValidationError{}}).Message(message, args...)
 	v.Errors = append(v.Errors, result.Error)
 	return result
 }
 
-// ValidationResult возвращается для каждого способа валидации.
-// Он предоставляет указание на успех и указатель на ошибку (если есть)
+// ValidationResult is returned for every validation method
+// It has Ok if validation succeeded or an error pointer
 type ValidationResult struct {
 	Error *ValidationError
 	Ok    bool
 }
 
-// Message устанавливает сообщение об ошибке в ValidationResult,
-// Возвращает себя. Допускает вызов по типу sprintf() со множеством параметров
+// Message writes an error message to ValidationResult,
+// Returns itself. Can be called like Sprintf()
 func (r *ValidationResult) Message(message string, args ...interface{}) *ValidationResult {
-	if r.Error != nil {
-		if len(args) == 0 {
-			r.Error.Message = message
-		} else {
-			r.Error.Message = fmt.Sprintf(message, args...)
-		}
+	if r.Error == nil {
+		return r
+	}
+	r.Error.Message = message
+	if len(args) > 0 {
+		r.Error.Message = fmt.Sprintf(message, args...)
 	}
 	return r
 }
 
-// Required проверяет что аргумент не является nil и не является пустым (если это строка или срез)
-func (v *Validation) Required(obj interface{}) *ValidationResult {
-	return v.apply(Required{}, obj)
-}
+// Required checks the obj is not nil and is not zero value (empty string or slice)
+func (v *Validation) Required(obj interface{}) *ValidationResult { return v.apply(Required{}, obj) }
 
-// Min проверяет что n >= min
-func (v *Validation) Min(n int, min int) *ValidationResult {
-	return v.apply(Min{min}, n)
-}
+// Min checks that n >= min
+func (v *Validation) Min(n int, min int) *ValidationResult { return v.apply(Min{min}, n) }
 
-// Max проверяет что n <= max
-func (v *Validation) Max(n int, max int) *ValidationResult {
-	return v.apply(Max{max}, n)
-}
+// Max checks that n <= max
+func (v *Validation) Max(n int, max int) *ValidationResult { return v.apply(Max{max}, n) }
 
-// Range проверяет что min <= n <= max
+// Range checks that min <= n <= max
 func (v *Validation) Range(n, min, max int) *ValidationResult {
 	return v.apply(Range{Min{min}, Max{max}}, n)
 }
 
-// MinSize проверяет что размер объекта obj >= min
+// MinSize checks that size of obj >= min
 func (v *Validation) MinSize(obj interface{}, min int) *ValidationResult {
 	return v.apply(MinSize{min}, obj)
 }
 
-// MaxSize проверяет что размер объекта obj <= max
+// MaxSize checks that size of obj <= max
 func (v *Validation) MaxSize(obj interface{}, max int) *ValidationResult {
 	return v.apply(MaxSize{max}, obj)
 }
 
-// Length проверяет что длина объекта obj равна n
-func (v *Validation) Length(obj interface{}, n int) *ValidationResult {
-	return v.apply(Length{n}, obj)
-}
+// Length checks that length of obj == n
+func (v *Validation) Length(obj interface{}, n int) *ValidationResult { return v.apply(Length{n}, obj) }
 
-// Match проверяет что строка str соответствует регулярному выражению regex
+// Match checks that str matches regex
 func (v *Validation) Match(str string, regex *regexp.Regexp) *ValidationResult {
 	return v.apply(Match{regex}, str)
 }
 
-// Email проверяет на корректность адрес e-mail в параметре str
-func (v *Validation) Email(str string) *ValidationResult {
-	return v.apply(Email{Match{emailPattern}}, str)
+// Email checks that e-mail is valid
+func (v *Validation) Email(email string) *ValidationResult {
+	return v.apply(Email{Match{emailPattern}}, email)
 }
 
-// apply применяет объект, реализующий интерфейс Validator к obj
+// apply validator to obj
 // и возвращает результат валидации
 func (v *Validation) apply(chk Validator, obj interface{}) *ValidationResult {
 	if chk.IsSatisfied(obj) {
 		return &ValidationResult{Ok: true}
 	}
 
-	// Добавляем ошибку в контекст валидации
-	err := &ValidationError{
-		Message: chk.DefaultMessage(),
-	}
+	// add error to a validation context
+	err := &ValidationError{Message: chk.DefaultMessage()}
 	v.Errors = append(v.Errors, err)
 
-	// Так же возвращаем её
-	return &ValidationResult{
-		Ok:    false,
-		Error: err,
-	}
+	// and return it
+	return &ValidationResult{Ok: false, Error: err}
 }
 
-// Check применяет набор объектов checks, реализующих интерфейс Validator к полю obj,
-// и возвращает ValidationResult от первой ошибки валидации, или от последней успешной.
+// Check apply validator checks to obj and returns a ValidationResult from first validation error,
+// or from last successful validation
 func (v *Validation) Check(obj interface{}, checks ...Validator) *ValidationResult {
 	var result *ValidationResult
 	for _, check := range checks {
